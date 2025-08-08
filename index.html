@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web AR 演示 - GitHub Pages</title>
+    
+    <!-- 引入 A-Frame 和 AR.js 库 -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        .ar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .ar-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+            max-width: 320px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .ar-controls h3 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        
+        .ar-controls p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .ar-controls button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .ar-controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            z-index: 1000;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-indicator.found {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        
+        .status-indicator.lost {
+            background: rgba(244, 67, 54, 0.9);
+        }
+        
+        @media (max-width: 768px) {
+            .ar-controls {
+                max-width: 280px;
+                padding: 12px;
+            }
+            
+            .ar-controls h3 {
+                font-size: 16px;
+            }
+            
+            .ar-controls p {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 控制面板 -->
+    <div class="ar-controls">
+        <h3>🎯 Web AR 演示</h3>
+        <p><strong>使用步骤：</strong></p>
+        <p>1. 允许浏览器访问摄像头</p>
+        <p>2. 下载或显示 Hiro 标记</p>
+        <p>3. 将标记对准摄像头</p>
+        <p>4. 观看 3D 对象出现在标记上</p>
+        <button onclick="downloadMarker()">📥 下载 Hiro 标记</button>
+    </div>
+    
+    <!-- 状态指示器 -->
+    <div class="status-indicator" id="statusIndicator">
+        🔍 正在搜索 AR 标记...
+    </div>
+
+    <!-- AR 场景 -->
+    <div class="ar-container">
+        <a-scene 
+            embedded 
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+            vr-mode-ui="enabled: false"
+            gesture-detector>
+            
+            <!-- AR 标记检测 -->
+            <a-marker 
+                preset="hiro" 
+                id="hiroMarker"
+                raycaster="objects: .clickable"
+                emitevents="true"
+                cursor="fuse: false; rayOrigin: mouse;">
+                
+                <!-- 旋转的立方体 -->
+                <a-box 
+                    id="cube1"
+                    position="0 0.5 0" 
+                    rotation="0 45 0" 
+                    color="#4CC3D9" 
+                    scale="0.8 0.8 0.8"
+                    class="clickable"
+                    animation="property: rotation; to: 360 405 0; loop: true; dur: 4000"
+                    shadow>
+                </a-box>
+                
+                <!-- 浮动的球体 -->
+                <a-sphere 
+                    id="sphere1"
+                    position="1.5 1 0" 
+                    radius="0.4" 
+                    color="#FF6B6B" 
+                    class="clickable"
+                    animation="property: position; to: 1.5 2 0; dir: alternate; dur: 2000; loop: true"
+                    shadow>
+                </a-sphere>
+                
+                <!-- 旋转的圆锥体 -->
+                <a-cone 
+                    id="cone1"
+                    position="-1.5 0.5 0" 
+                    radius-bottom="0.4" 
+                    radius-top="0" 
+                    height="0.8" 
+                    color="#FFC107" 
+                    class="clickable"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"
+                    shadow>
+                </a-cone>
+                
+                <!-- 地面 -->
+                <a-plane 
+                    position="0 0 0" 
+                    rotation="-90 0 0" 
+                    width="4" 
+                    height="4" 
+                    color="#7BC8A4" 
+                    opacity="0.3"
+                    shadow>
+                </a-plane>
+                
+                <!-- 环境光 -->
+                <a-light type="ambient" color="#404040"></a-light>
+                <a-light type="directional" position="0 1 1" color="#ffffff" intensity="0.5" cast-shadow></a-light>
+            </a-marker>
+            
+            <!-- 摄像头 -->
+            <a-entity camera></a-entity>
+        </a-scene>
+    </div>
+
+    <script>
+        // AR 场景初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            const scene = document.querySelector('a-scene');
+            const marker = document.querySelector('#hiroMarker');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            // 监听标记找到事件
+            marker.addEventListener('markerFound', () => {
+                console.log('✅ AR 标记已找到！');
+                statusIndicator.textContent = '🎉 AR 标记已识别';
+                statusIndicator.className = 'status-indicator found';
+                
+                // 添加找到标记的动画效果
+                const objects = marker.querySelectorAll(':not(a-plane)');
+                objects.forEach((obj, index) => {
+                    setTimeout(() => {
+                        obj.setAttribute('animation', `property: scale; to: 1 1 1; dur: 500; easing: easeOutElastic`);
+                    }, index * 200);
+                });
+            });
+            
+            // 监听标记丢失事件
+            marker.addEventListener('markerLost', () => {
+                console.log('❌ AR 标记已丢失');
+                statusIndicator.textContent = '🔍 正在搜索 AR 标记...';
+                statusIndicator.className = 'status-indicator lost';
+            });
+            
+            // 添加点击交互
+            const clickableObjects = document.querySelectorAll('.clickable');
+            clickableObjects.forEach(obj => {
+                obj.addEventListener('click', () => {
+                    // 创建点击效果
+                    createClickEffect(obj);
+                    
+                    // 改变颜色
+                    const colors = ['#4CC3D9', '#FF6B6B', '#FFC107', '#9C27B0', '#4CAF50'];
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    obj.setAttribute('color', randomColor);
+                    
+                    // 播放点击音效
+                    playClickSound();
+                });
+            });
+            
+            // 检查设备兼容性
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('⚠️ 您的设备不支持摄像头访问，无法使用 AR 功能');
+                statusIndicator.textContent = '❌ 设备不支持';
+                statusIndicator.className = 'status-indicator lost';
+            }
+        });
+        
+        // 创建点击效果
+        function createClickEffect(object) {
+            const position = object.getAttribute('position');
+            const effect = document.createElement('a-sphere');
+            effect.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
+            effect.setAttribute('radius', '0.1');
+            effect.setAttribute('color', '#ffffff');
+            effect.setAttribute('opacity', '0.8');
+            effect.setAttribute('animation', 'property: scale; to: 3 3 3; dur: 500; easing: easeOutQuad');
+            effect.setAttribute('animation__fade', 'property: opacity; to: 0; dur: 500; easing: easeOutQuad');
+            
+            const marker = document.querySelector('#hiroMarker');
+            marker.appendChild(effect);
+            
+            // 移除效果
+            setTimeout(() => {
+                marker.removeChild(effect);
+            }, 500);
+        }
+        
+        // 播放点击音效
+        function playClickSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                console.log('音频播放失败:', e);
+            }
+        }
+        
+        // 下载 Hiro 标记
+        function downloadMarker() {
+            const link = document.createElement('a');
+            link.href = 'https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png';
+            link.download = 'hiro-marker.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 处理音频上下文的用户激活要求
+        document.addEventListener('click', function initAudio() {
+            if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+                const audioContext = new (AudioContext || webkitAudioContext)();
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }
+            document.removeEventListener('click', initAudio);
+        }, { once: true });
+    </script>
+</body>
+</html>
